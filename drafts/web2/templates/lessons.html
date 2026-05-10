@@ -1,0 +1,162 @@
+<!-- templates/lessons.html -->
+{% extends "base.html" %}
+
+{% block title %}AI ВУЗ - Уроки и материалы{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Заголовок -->
+    <div class="text-center mb-5">
+        <h1 class="display-4" style="background: linear-gradient(135deg, #2dd4bf, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Уроки и учебные материалы
+        </h1>
+        <p class="text-secondary fs-5">Изучайте материалы с помощью AI-поиска</p>
+    </div>
+
+    <!-- Поиск -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="ai-search">
+                <input type="text" id="searchInput" placeholder="Поиск по урокам..." value="{{ search_query or '' }}">
+                <button onclick="searchLessons()">Поиск</button>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small class="text-secondary">Найдено материалов: {{ lessons|length }}</small>
+                {% if search_query %}
+                    <a href="{{ url_for('lessons') }}" class="text-ai-cyan text-decoration-none">Сбросить поиск</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Сетка уроков -->
+    <div class="row g-4">
+        {% for lesson in lessons %}
+        <div class="col-md-6 col-lg-4">
+            <div class="ai-card h-100">
+                <div class="ai-card-header d-flex justify-content-between align-items-center">
+                    <span>{{ lesson.title }}</span>
+                    <small class="text-secondary">Урок {{ loop.index }}</small>
+                </div>
+                <div class="ai-card-body">
+                    <p class="text-secondary">{{ lesson.description[:150] }}...</p>
+
+                    <!-- Темы урока -->
+                    <div class="mb-3">
+                        <small class="text-ai-cyan">Темы:</small>
+                        <div class="mt-1">
+                            {% for topic in lesson.topics[:3] %}
+                            <span class="badge" style="background: rgba(45, 212, 191, 0.1); color: #2dd4bf; margin-right: 5px;">
+                                {{ topic }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Метаданные -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-secondary">
+                            <span>⏱ {{ lesson.duration }}</span>
+                            <span class="ms-2">📚 {{ lesson.materials }}</span>
+                        </small>
+                        <button class="btn-ai-outline btn-sm" onclick="showLessonDetails('{{ lesson.id }}')">
+                            Подробнее
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="ai-card text-center p-5">
+                <h3 class="text-secondary mb-3">Ничего не найдено</h3>
+                <p class="text-secondary">Попробуйте изменить поисковый запрос</p>
+                <a href="{{ url_for('lessons') }}" class="btn-ai-outline">Сбросить поиск</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Модальное окно с деталями урока -->
+    <div class="modal fade" id="lessonModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: var(--ai-dark-card); border: 1px solid rgba(45, 212, 191, 0.2);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(45, 212, 191, 0.1);">
+                    <h5 class="modal-title" style="color: #2dd4bf;" id="modalLessonTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalLessonContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const lessonsData = {{ lessons|tojson }};
+
+    function searchLessons() {
+        const query = document.getElementById('searchInput').value;
+        window.location.href = "{{ url_for('lessons') }}?search=" + encodeURIComponent(query);
+    }
+
+    function showLessonDetails(lessonId) {
+        const lesson = lessonsData.find(l => l.id == lessonId);
+        if (!lesson) return;
+
+        document.getElementById('modalLessonTitle').textContent = lesson.title;
+
+        let content = `
+            <div class="mb-4">
+                <h6 class="text-ai-cyan">Описание</h6>
+                <p class="text-secondary">${lesson.full_description || lesson.description}</p>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="text-ai-cyan">Темы урока</h6>
+                <ul class="list-unstyled">
+        `;
+
+        lesson.topics.forEach(topic => {
+            content += `<li class="text-secondary mb-2">• ${topic}</li>`;
+        });
+
+        content += `
+                </ul>
+            </div>
+
+            <div class="row">
+                <div class="col-6">
+                    <h6 class="text-ai-cyan">Длительность</h6>
+                    <p class="text-secondary">${lesson.duration}</p>
+                </div>
+                <div class="col-6">
+                    <h6 class="text-ai-cyan">Материалы</h6>
+                    <p class="text-secondary">${lesson.materials}</p>
+                </div>
+            </div>
+
+            ${lesson.content ? `
+            <div class="mt-4">
+                <h6 class="text-ai-cyan">Содержание</h6>
+                <div class="ai-card-body" style="background: rgba(0,0,0,0.2);">
+                    ${lesson.content}
+                </div>
+            </div>
+            ` : ''}
+        `;
+
+        document.getElementById('modalLessonContent').innerHTML = content;
+
+        new bootstrap.Modal(document.getElementById('lessonModal')).show();
+    }
+
+    // Enter для поиска
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchLessons();
+        }
+    });
+</script>
+{% endblock %}

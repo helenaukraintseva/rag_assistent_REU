@@ -1,0 +1,49 @@
+<!-- templates/auth/login.html -->
+{% extends "base.html" %}
+
+{% block title %}Вход в систему - AI Campus{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0 glow-text">Вход в систему</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required
+                               placeholder="student@university.ru">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" name="password" class="form-control" required
+                               placeholder="••••••••">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                        <label class="form-check-label" for="remember">Запомнить меня</label>
+                    </div>
+                    <button type="submit" class="btn-ai w-100">
+                        Войти в систему
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-secondary">Нет аккаунта?
+                        <a href="{{ url_for('register') }}" class="glow-text">Зарегистрироваться</a>
+                    </p>
+                </div>
+
+                <div class="mt-4 p-3" style="background: var(--bg-input); border-radius: 8px;">
+                    <p class="text-secondary mb-2 small">Демо-доступ:</p>
+                    <p class="mb-1 small">Студент: student@university.ru / student123</p>
+                    <p class="mb-0 small">Преподаватель: teacher@university.ru / teacher123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

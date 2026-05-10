@@ -1,0 +1,4 @@
+2025-12-30 19:58:25,632 - __main__ - ERROR - Ошибка импорта модулей: cannot import name 'Config' from 'config' (C:\Projects\rag_system\rag_vector_db\config.py)
+2025-12-30 19:58:25,632 - __main__ - ERROR - Убедитесь, что все файлы проекта на месте:
+2025-12-30 19:58:25,632 - __main__ - ERROR -   config.py, document_loader.py, text_splitter.py
+2025-12-30 19:58:25,632 - __main__ - ERROR -   embedding_generator.py, faiss_manager.py

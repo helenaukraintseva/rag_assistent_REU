@@ -1,0 +1,45 @@
+<!-- templates/login.html -->
+{% extends "base.html" %}
+
+{% block title %}AI ВУЗ - Вход{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2 class="auth-title">Вход в систему</h2>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-4">
+                    <label class="ai-form-label">Email или имя пользователя</label>
+                    <input type="text" name="username" class="ai-form-control w-100" required
+                           placeholder="Введите email или имя">
+                </div>
+
+                <div class="mb-4">
+                    <label class="ai-form-label">Пароль</label>
+                    <input type="password" name="password" class="ai-form-control w-100" required
+                           placeholder="Введите пароль">
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember">
+                    <label class="form-check-label text-secondary" for="remember">
+                        Запомнить меня
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-ai-primary w-100 mb-3">
+                    Войти
+                </button>
+
+                <div class="text-center">
+                    <a href="{{ url_for('register') }}" class="text-ai-cyan text-decoration-none">
+                        Нет аккаунта? Зарегистрироваться
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

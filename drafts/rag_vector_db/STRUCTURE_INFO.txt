@@ -1,0 +1,59 @@
+============================================================
+ИНФОРМАЦИЯ О СТРУКТУРЕ ПРОЕКТА
+============================================================
+
+📁 ДИРЕКТОРИИ:
+----------------------------------------
+  rag_vector_db/
+  rag_vector_db/data/
+  rag_vector_db/data/raw/
+  rag_vector_db/data/processed/
+  rag_vector_db/outputs/
+  rag_vector_db/example_documents/
+
+📄 PYTHON ФАЙЛЫ:
+----------------------------------------
+  rag_vector_db/config.py
+  rag_vector_db/document_loader.py
+  rag_vector_db/text_splitter.py
+  rag_vector_db/embedding_generator.py
+  rag_vector_db/faiss_manager.py
+  rag_vector_db/build_vector_db.py
+  rag_vector_db/search_demo.py
+
+⚙️  КОНФИГУРАЦИОННЫЕ ФАЙЛЫ:
+----------------------------------------
+  rag_vector_db/requirements.txt
+  rag_vector_db/README.md
+  rag_vector_db/.gitignore
+  rag_vector_db/.env.example
+
+📝 ПРИМЕРЫ ДОКУМЕНТОВ:
+----------------------------------------
+  rag_vector_db/example_documents/schedule.txt
+  rag_vector_db/example_documents/faq.txt
+  rag_vector_db/example_documents/regulations.txt
+  rag_vector_db/data/raw/sample_schedule.txt
+
+============================================================
+СЛЕДУЮЩИЕ ШАГИ:
+============================================================
+
+1. Установите зависимости:
+   pip install -r requirements.txt
+
+2. Заполните файлы кодом:
+   - config.py - настройки проекта
+   - document_loader.py - загрузка документов
+   - text_splitter.py - разбиение текста
+   - embedding_generator.py - эмбеддинги
+   - faiss_manager.py - работа с FAISS
+   - build_vector_db.py - основной скрипт
+
+3. Добавьте документы в data/raw/
+
+4. Запустите создание БД:
+   python build_vector_db.py
+
+5. Протестируйте поиск:
+   python search_demo.py

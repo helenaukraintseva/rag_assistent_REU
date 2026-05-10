@@ -1,0 +1,147 @@
+<!-- templates/rules.html -->
+{% extends "base.html" %}
+
+{% block title %}AI ВУЗ - Правила обучения{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Заголовок -->
+    <div class="text-center mb-5">
+        <h1 class="display-4" style="background: linear-gradient(135deg, #2dd4bf, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Правила обучения
+        </h1>
+        <p class="text-secondary fs-5">Актуальные правила и нормативные документы</p>
+    </div>
+
+    <!-- Поиск -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="ai-search">
+                <input type="text" id="searchInput" placeholder="Поиск по правилам..." value="{{ search_query or '' }}">
+                <button onclick="searchRules()">Поиск</button>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small class="text-secondary">Найдено разделов: {{ rules|length }}</small>
+                {% if search_query %}
+                    <a href="{{ url_for('rules') }}" class="text-ai-cyan text-decoration-none">Сбросить поиск</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Правила (аккордеон) -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="accordion" id="rulesAccordion">
+                {% for rule in rules %}
+                <div class="accordion-item" style="background: var(--ai-dark-card); border: 1px solid rgba(45, 212, 191, 0.1); margin-bottom: 1rem; border-radius: 12px; overflow: hidden;">
+                    <h2 class="accordion-header" id="heading{{ loop.index }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse{{ loop.index }}"
+                                style="background: transparent; color: var(--ai-text-primary);"
+                                onclick="highlightRule('{{ rule.id }}')">
+                            <div>
+                                <span class="badge me-2" style="background: rgba(45, 212, 191, 0.2); color: #2dd4bf;">{{ rule.category }}</span>
+                                <span style="color: #2dd4bf;">{{ rule.title }}</span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ loop.index }}" class="accordion-collapse collapse"
+                         data-bs-parent="#rulesAccordion">
+                        <div class="accordion-body" style="border-top: 1px solid rgba(45, 212, 191, 0.1);">
+                            <div class="rule-content text-secondary" id="rule-{{ rule.id }}">
+                                {{ rule.content|safe }}
+                            </div>
+
+                            {% if rule.additional %}
+                            <div class="mt-4 p-3" style="background: rgba(0,0,0,0.2); border-radius: 8px;">
+                                <small class="text-ai-cyan">Дополнительная информация:</small>
+                                <p class="text-secondary mt-2">{{ rule.additional }}</p>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-3 text-end">
+                                <small class="text-secondary">Последнее обновление: {{ rule.updated }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="ai-card text-center p-5">
+                    <h3 class="text-secondary mb-3">Правила не найдены</h3>
+                    <p class="text-secondary">По вашему запросу "{{ search_query }}" ничего не найдено</p>
+                    <a href="{{ url_for('rules') }}" class="btn-ai-outline">Сбросить поиск</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background: linear-gradient(135deg, rgba(45, 212, 191, 0.1), rgba(168, 85, 247, 0.1)) !important;
+        color: #2dd4bf !important;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(45, 212, 191, 0.3);
+    }
+
+    .accordion-button::after {
+        filter: invert(1);
+    }
+
+    .highlight-rule {
+        animation: highlightPulse 2s ease;
+    }
+
+    @keyframes highlightPulse {
+        0% { background: transparent; }
+        30% { background: rgba(45, 212, 191, 0.2); }
+        100% { background: transparent; }
+    }
+</style>
+
+<script>
+    function searchRules() {
+        const query = document.getElementById('searchInput').value;
+        window.location.href = "{{ url_for('rules') }}?search=" + encodeURIComponent(query);
+    }
+
+    function highlightRule(ruleId) {
+        setTimeout(() => {
+            const element = document.getElementById(`rule-${ruleId}`);
+            if (element) {
+                element.classList.add('highlight-rule');
+                setTimeout(() => {
+                    element.classList.remove('highlight-rule');
+                }, 2000);
+            }
+        }, 300);
+    }
+
+    // Enter для поиска
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchRules();
+        }
+    });
+
+    // Открываем нужный раздел если есть якорь
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('search');
+        if (searchQuery) {
+            // Подсвечиваем совпадения
+            document.querySelectorAll('.rule-content').forEach(el => {
+                const text = el.textContent.toLowerCase();
+                if (text.includes(searchQuery.toLowerCase())) {
+                    el.classList.add('highlight-rule');
+                }
+            });
+        }
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат-ассистент РЭУ им. Плеханова</title>
+</head>
+<body>
+    <div class="header">
+        <div class="university-name">Российский экономический университет имени Г. В. Плеханова</div>
+    </div>
+
+    <div class="app">
+        <!-- БЛОК ИСТОРИЯ -->
+        <div class="history-panel">
+            <div class="history-title">История диалогов</div>
+            <ul class="history-list" id="historyList">
+                <!-- динамически будет заполняться -->
+            </ul>
+            <div class="clear-all-history" id="clearHistoryBtn">🗑️ Стереть всю историю</div>
+        </div>
+
+        <!-- Центральная часть -->
+        <div class="main-area">
+            <div class="sources" id="sourcesBlock">
+                <span class="sources-label">📄 Доступные документы:</span>
+                <span class="source-tag" data-source="all">📚 Все документы</span>
+                <span class="loading" id="sourcesLoading" style="display: none;"></span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <!-- типовые вопросы -->
+            <div class="quick-questions" id="quickQuestions">
+                <button class="quick-btn" data-q="Правила зачисления в бакалавриат 2026">📌 Правила зачисления 2026</button>
+                <button class="quick-btn" data-q="Когда начинаются занятия в 1 семестре?">📅 Занятия</button>
+                <button class="quick-btn" data-q="Какие документы нужны для поступления?">📑 Документы для поступления</button>
+                <button class="quick-btn" data-q="Есть ли военный учебный центр?">🎖️ Военный центр</button>
+                <button class="quick-btn" data-q="Как получить справку об обучении?">📄 Справка об обучении</button>
+                <button class="quick-btn" data-q="Как заказать справку для налогового вычета?">💰 Налоговый вычет</button>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
+                <button id="sendBtn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- футер с реальными контактами РЭУ -->
+    <div class="footer">
+        <div>Российский экономический университет имени Г.В. Плеханова</div>
+        <div class="footer-contacts">
+            <span>{{ work_type }}</span>
+            <span>📞 Приёмная комиссия: +7 (495) 800-12-88</span>
+            <span>✉️ rector@rea.ru</span>
+            <span>📍 Москва, Стремянный пер., 36</span>
+            <span>🌐 rea.ru</span>
+        </div>
+    </div>
+</body>
+</html>

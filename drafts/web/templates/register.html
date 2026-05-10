@@ -1,0 +1,128 @@
+              <!-- templates/auth/register.html -->
+{% extends "base.html" %}
+
+{% block title %}Регистрация - AI Campus{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0 glow-text">Регистрация в системе</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Имя</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Фамилия</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required
+                               placeholder="example@university.ru">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" name="password" class="form-control" required
+                                   minlength="6">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Подтверждение пароля</label>
+                            <input type="password" name="confirm_password" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Роль</label>
+                        <select name="role" class="form-select" required>
+                            <option value="student">Студент</option>
+                            <option value="teacher">Преподаватель</option>
+                        </select>
+                    </div>
+
+                    <div id="studentFields">
+                        <div class="mb-3">
+                            <label class="form-label">Факультет</label>
+                            <select name="faculty" class="form-select">
+                                <option value="ФИиВТ">Факультет информатики и вычислительной техники</option>
+                                <option value="ФМиАТ">Факультет математики и аналитических технологий</option>
+                                <option value="ФЭиУ">Факультет экономики и управления</option>
+                                <option value="ФГН">Факультет гуманитарных наук</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Группа</label>
+                            <input type="text" name="group" class="form-control" placeholder="ИВТ-41">
+                        </div>
+                    </div>
+
+                    <div id="teacherFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Должность</label>
+                            <input type="text" name="position" class="form-control" placeholder="Доцент">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Кафедра</label>
+                            <input type="text" name="department" class="form-control" placeholder="Информатики">
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="agree" class="form-check-input" id="agree" required>
+                        <label class="form-check-label" for="agree">
+                            Согласие на обработку персональных данных
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-ai w-100">
+                        Зарегистрироваться
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-secondary">Уже есть аккаунт?
+                        <a href="{{ url_for('login') }}" class="glow-text">Войти</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('select[name="role"]').addEventListener('change', function() {
+    const studentFields = document.getElementById('studentFields');
+    const teacherFields = document.getElementById('teacherFields');
+
+    if (this.value === 'student') {
+        studentFields.style.display = 'block';
+        teacherFields.style.display = 'none';
+
+        document.querySelector('select[name="faculty"]').required = true;
+        document.querySelector('input[name="group"]').required = true;
+        document.querySelector('input[name="position"]').required = false;
+    } else {
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'block';
+
+        document.querySelector('select[name="faculty"]').required = false;
+        document.querySelector('input[name="group"]').required = false;
+        document.querySelector('input[name="position"]').required = true;
+    }
+});
+</script>
+{% endblock %}

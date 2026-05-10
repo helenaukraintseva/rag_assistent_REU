@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-12-31 03:30:38.221658",
+  "model": "cointegrated/LaBSE-en-ru",
+  "chunk_size": 1000,
+  "chunk_overlap": 200,
+  "total_documents": 2,
+  "total_chunks": 2,
+  "embedding_dimension": 768,
+  "vector_db": "chromadb",
+  "collection_name": "documents",
+  "persist_directory": "C:\\Projects\\rag_system\\rag_vector_db\\outputs\\chroma_db",
+  "device": "cpu",
+  "total_ids": 2,
+  "chromadb_version": "1.4.0"
+}

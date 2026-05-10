@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат-ассистент РЭУ им. Плеханова</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f7fa;
+            color: #1e293b;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* хедер */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .university-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0f3b5c;
+            letter-spacing: -0.01em;
+        }
+
+        /* основная сетка */
+        .app {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 1px;
+            background: #e2e8f0;
+        }
+
+        /* левая панель — история */
+        .history-panel {
+            width: 280px;
+            background: white;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #5b6e8c;
+            margin-bottom: 1rem;
+        }
+
+        .history-list {
+            list-style: none;
+            flex: 1;
+        }
+
+        .history-item {
+            padding: 0.75rem 0.75rem;
+            border-radius: 12px;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #1e293b;
+            transition: background 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: #f1f5f9;
+        }
+
+        .history-item.active {
+            background: #eef2ff;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        .delete-chat-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0 0.25rem;
+            opacity: 0;
+            transition: 0.1s;
+        }
+
+        .history-item:hover .delete-chat-btn {
+            opacity: 1;
+        }
+
+        .delete-chat-btn:hover {
+            color: #dc2626;
+        }
+
+        .clear-all-history {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 40px;
+            color: #b91c1c;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.15s;
+        }
+
+        .clear-all-history:hover {
+            background: #fee2e2;
+        }
+
+        /* правая область */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        /* документы-источники */
+        .sources {
+            background: #fefce8;
+            border-bottom: 1px solid #fde047;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.85rem;
+            color: #854d0e;
+        }
+
+        .sources-label {
+            font-weight: 600;
+            margin-right: 0.75rem;
+        }
+
+        .source-tag {
+            background: white;
+            border-radius: 20px;
+            padding: 0.2rem 0.7rem;
+            margin-right: 0.5rem;
+            font-size: 0.8rem;
+            border: 1px solid #facc15;
+            display: inline-block;
+            margin-bottom: 0.25rem;
+        }
+
+        /* окно сообщений */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 85%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1.5rem;
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .user .bubble {
+            background: #0f3b5c;
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .bot .bubble {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .timestamp {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        /* сноска на документ */
+        .citation {
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            margin-top: 0.2rem;
+            margin-left: 0.75rem;
+            background: #f8fafc;
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 16px;
+            max-width: fit-content;
+        }
+
+        .citation a {
+            color: #0f3b5c;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .citation a:hover {
+            text-decoration: underline;
+        }
+
+        /* типовые вопросы */
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            background: #fafcff;
+        }
+
+        .quick-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .quick-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* поле ввода */
+        .input-area {
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+            background: white;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .input-area input:focus {
+            border-color: #0f3b5c;
+            box-shadow: 0 0 0 2px rgba(15,59,92,0.1);
+        }
+
+        .input-area button {
+            background: #0f3b5c;
+            border: none;
+            color: white;
+            padding: 0 1.5rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* футер */
+        .footer {
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            font-size: 0.8rem;
+            color: #475569;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .footer-contacts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .footer-contacts span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="university-name">Российский экономический университет имени Г. В. Плеханова</div>
+    </div>
+
+    <div class="app">
+        <!-- БЛОК ИСТОРИЯ -->
+        <div class="history-panel">
+            <div class="history-title">История диалогов</div>
+            <ul class="history-list" id="historyList">
+                <!-- динамически будет заполняться -->
+            </ul>
+            <div class="clear-all-history" id="clearHistoryBtn">🗑️ Стереть всю историю</div>
+        </div>
+
+        <!-- Центральная часть -->
+        <div class="main-area">
+            <div class="sources" id="sourcesBlock">
+                <span class="sources-label">📄 Документы-источники:</span>
+                <span class="source-tag">Устав РЭУ.pdf</span>
+                <span class="source-tag">Правила приема 2025.pdf</span>
+                <span class="source-tag">Расписание_занятий.docx</span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <!-- типовые вопросы -->
+            <div class="quick-questions" id="quickQuestions">
+                <button class="quick-btn" data-q="Правила зачисления в бакалавриат 2025">📌 Правила зачисления</button>
+                <button class="quick-btn" data-q="Когда начинаются занятия в 1 семестре?">📅 Занятия</button>
+                <button class="quick-btn" data-q="Какие документы нужны для поступления?">📑 Документы для поступления</button>
+                <button class="quick-btn" data-q="Есть ли военная кафедра?">🎖️ Военная кафедра</button>
+                <button class="quick-btn" data-q="Как получить справку об обучении?">📄 Справка об обучении</button>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
+                <button id="sendBtn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- футер с реальными контактами РЭУ -->
+    <div class="footer">
+        <div>© 2026 Российский экономический университет имени Г.В. Плеханова</div>
+        <div class="footer-contacts">
+            <span>📞 Приёмная комиссия: +7 (495) 800-12-88</span>
+            <span>✉️ rector@rea.ru</span>
+            <span>📍 Москва, Стремянный пер., 36</span>
+            <span>🌐 rea.ru</span>
+        </div>
+    </div>
+
+    <script>
+        // ---------- ХРАНИЛИЩЕ ДАННЫХ ----------
+        let chats = {};          // { chatId: { messages: [], sources: [] } }
+        let currentChatId = "1";
+        let nextChatId = 2;
+
+        // источники по умолчанию
+        const defaultSources = [
+            { name: "Устав РЭУ.pdf", link: "/docs/charter.pdf" },
+            { name: "Правила приема 2025.pdf", link: "/docs/admission.pdf" },
+            { name: "Расписание_занятий.docx", link: "/docs/schedule.docx" }
+        ];
+
+        // функция инициализации
+        function init() {
+            if (!localStorage.getItem('plekhanov_chats')) {
+                // создаём чат по умолчанию
+                const defaultChat = {
+                    messages: [
+                        { text: "Здравствуйте! Чем могу помочь? У меня есть доступ к документам университета.", sender: "bot", timestamp: getTime(), sourceDoc: null },
+                        { text: "Какие источники сейчас подключены?", sender: "user", timestamp: getTime(), sourceDoc: null },
+                        { text: "Сейчас активны: Устав РЭУ, Правила приема 2025 и Расписание занятий.", sender: "bot", timestamp: getTime(), sourceDoc: "Устав РЭУ.pdf" }
+                    ],
+                    sources: defaultSources
+                };
+                chats = { "1": defaultChat };
+                nextChatId = 2;
+                saveChats();
+            } else {
+                loadChats();
+            }
+            renderHistoryList();
+            renderCurrentChat();
+        }
+
+        function saveChats() {
+            localStorage.setItem('plekhanov_chats', JSON.stringify(chats));
+            localStorage.setItem('nextChatId', nextChatId);
+        }
+
+        function loadChats() {
+            chats = JSON.parse(localStorage.getItem('plekhanov_chats'));
+            nextChatId = parseInt(localStorage.getItem('nextChatId')) || 2;
+        }
+
+        function getTime() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        // рендер списка истории
+        function renderHistoryList() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+            Object.keys(chats).forEach(chatId => {
+                const li = document.createElement('li');
+                li.className = `history-item ${chatId == currentChatId ? 'active' : ''}`;
+                li.innerHTML = `<span>Чат ${chatId}</span>
+                               <button class="delete-chat-btn" data-id="${chatId}">🗑️</button>`;
+                li.querySelector('span').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    setCurrentChat(chatId);
+                });
+                const delBtn = li.querySelector('.delete-chat-btn');
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteSingleChat(chatId);
+                });
+                container.appendChild(li);
+            });
+        }
+
+        function setCurrentChat(chatId) {
+            if (!chats[chatId]) return;
+            currentChatId = chatId;
+            renderHistoryList();
+            renderCurrentChat();
+        }
+
+        function deleteSingleChat(chatId) {
+            if (Object.keys(chats).length === 1) {
+                // создадим новый чистый чат
+                const newId = String(nextChatId++);
+                chats[newId] = {
+                    messages: [{ text: "История очищена. Задайте новый вопрос.", sender: "bot", timestamp: getTime(), sourceDoc: null }],
+                    sources: defaultSources.slice()
+                };
+                delete chats[chatId];
+                currentChatId = newId;
+            } else {
+                delete chats[chatId];
+                if (currentChatId === chatId) {
+                    currentChatId = Object.keys(chats)[0];
+                }
+            }
+            saveChats();
+            renderHistoryList();
+            renderCurrentChat();
+        }
+
+        function clearAllHistory() {
+            const newId = String(nextChatId++);
+            chats = {
+                [newId]: {
+                    messages: [{ text: "Вся история удалена. Начнём новый диалог.", sender: "bot", timestamp: getTime(), sourceDoc: null }],
+                    sources: defaultSources.slice()
+                }
+            };
+            currentChatId = newId;
+            saveChats();
+            renderHistoryList();
+            renderCurrentChat();
+        }
+
+        // отображение текущего чата (сообщения + источники)
+        function renderCurrentChat() {
+            const chat = chats[currentChatId];
+            if (!chat) return;
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            chat.messages.forEach(msg => {
+                addMessageToUI(msg.text, msg.sender, msg.timestamp, msg.sourceDoc, false);
+            });
+            // обновляем блок источников
+            const sourcesBlock = document.getElementById('sourcesBlock');
+            sourcesBlock.innerHTML = `<span class="sources-label">📄 Документы-источники:</span>`;
+            chat.sources.forEach(src => {
+                const tag = document.createElement('span');
+                tag.className = 'source-tag';
+                tag.textContent = src.name;
+                sourcesBlock.appendChild(tag);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addMessageToUI(text, sender, timestamp, sourceDoc, saveToChat = true) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = text;
+            const timeSpan = document.createElement('div');
+            timeSpan.className = 'timestamp';
+            timeSpan.textContent = timestamp;
+
+            messageDiv.appendChild(bubble);
+            messageDiv.appendChild(timeSpan);
+
+            if (sourceDoc && sender === 'bot') {
+                const citation = document.createElement('div');
+                citation.className = 'citation';
+                citation.innerHTML = `📎 Источник: <a href="#">${sourceDoc}</a>`;
+                messageDiv.appendChild(citation);
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            if (saveToChat && chats[currentChatId]) {
+                chats[currentChatId].messages.push({ text, sender, timestamp, sourceDoc });
+                saveChats();
+            }
+        }
+
+        // генерация ответа ИИ со сноской на документ
+        function getBotAnswer(question) {
+            const lowerQ = question.toLowerCase();
+            // типовые ответы со ссылкой на конкретный документ
+            if (lowerQ.includes("зачислен") || lowerQ.includes("правила зачисления")) {
+                return { text: "Правила зачисления в бакалавриат и магистратуру утверждены учёным советом. Необходимо подать документы через личный кабинет до 15 августа. Вступительные испытания: русский язык, математика, обществознание.", source: "Правила приема 2025.pdf" };
+            }
+            if (lowerQ.includes("занятия") || lowerQ.includes("расписание")) {
+                return { text: "Занятия в 1 семестре начинаются 1 сентября. Расписание публикуется в личном кабинете студента за 2 недели до начала.", source: "Расписание_занятий.docx" };
+            }
+            if (lowerQ.includes("документы для поступлен")) {
+                return { text: "Для поступления нужны: паспорт, аттестат/диплом, СНИЛС, 4 фото, результаты ЕГЭ или внутренних испытаний.", source: "Правила приема 2025.pdf" };
+            }
+            if (lowerQ.includes("военная кафедра")) {
+                return { text: "В РЭУ им. Плеханова есть военный учебный центр. Обучение проводится на базе основного вуза.", source: "Устав РЭУ.pdf" };
+            }
+            if (lowerQ.includes("справка об обучении")) {
+                return { text: "Справку об обучении можно заказать через личный кабинет студента в разделе «Документы» или в учебном отделе.", source: "Устав РЭУ.pdf" };
+            }
+            // Общий ответ с рандомным источником
+            const sourcesList = chats[currentChatId].sources;
+            const randomSource = sourcesList.length ? sourcesList[Math.floor(Math.random() * sourcesList.length)].name : defaultSources[0].name;
+            return { text: "Спасибо за вопрос. На основе доступных документов: " + randomSource + " – можем уточнить детали.", source: randomSource };
+        }
+
+        function sendUserMessage(text) {
+            if (!text.trim()) return;
+            const timestamp = getTime();
+            addMessageToUI(text, 'user', timestamp, null, true);
+            // имитируем ответ бота
+            setTimeout(() => {
+                const answer = getBotAnswer(text);
+                addMessageToUI(answer.text, 'bot', getTime(), answer.source, true);
+            }, 400);
+        }
+
+        // кнопки типовых вопросов
+        function setupQuickQuestions() {
+            const btns = document.querySelectorAll('.quick-btn');
+            btns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const qText = btn.getAttribute('data-q');
+                    document.getElementById('messageInput').value = qText;
+                    sendUserMessage(qText);
+                });
+            });
+        }
+
+        // навешиваем события
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const input = document.getElementById('messageInput');
+            sendUserMessage(input.value);
+            input.value = '';
+        });
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('messageInput');
+                sendUserMessage(input.value);
+                input.value = '';
+            }
+        });
+        document.getElementById('clearHistoryBtn').addEventListener('click', clearAllHistory);
+
+        init();
+        setupQuickQuestions();
+    </script>
+</body>
+</html>

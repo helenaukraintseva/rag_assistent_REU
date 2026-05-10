@@ -1,0 +1,945 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG QA Система с LLM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --success-color: #2ec4b6;
+            --warning-color: #ff9e00;
+            --danger-color: #e71d36;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .question-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .answer-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #eef1ff 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            border: 1px solid #e0e7ff;
+        }
+
+        .documents-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            height: 100%;
+        }
+
+        .document-card {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .document-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.15);
+        }
+
+        .document-card.active {
+            background: #eef1ff;
+            border-left-color: var(--accent-color);
+        }
+
+        .score-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .source-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .answer-text {
+            line-height: 1.6;
+            font-size: 1.1em;
+            white-space: pre-wrap;
+        }
+
+        .source-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .settings-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .history-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #eef1ff;
+            transform: translateX(5px);
+        }
+
+        .confidence-meter {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-color), var(--accent-color));
+            border-radius: 4px;
+        }
+
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .chat-bubble {
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .chat-bubble.question {
+            margin-left: 30px;
+            border-top-left-radius: 5px;
+        }
+
+        .chat-bubble.answer {
+            margin-right: 30px;
+            border-top-right-radius: 5px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6ebff 100%);
+        }
+
+        .chat-bubble:before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+
+        .chat-bubble.question:before {
+            left: -15px;
+            top: 20px;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 15px solid white;
+        }
+
+        .chat-bubble.answer:before {
+            right: -15px;
+            top: 20px;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 15px solid #e6ebff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="loading-spinner"></div>
+            <h4 class="mt-3" id="loadingText">Обрабатываю вопрос...</h4>
+            <p class="text-muted" id="loadingSubtext">Идёт поиск и генерация ответа</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="header-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-6"><i class="fas fa-robot text-primary"></i> RAG QA Система</h1>
+                    <p class="lead text-muted mb-0">Задавайте вопросы и получайте ответы на основе документов с использованием ИИ</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-inline-block px-3 py-2 rounded" style="background: #f0f4ff;">
+                        <small class="text-muted">Статус:</small>
+                        <span class="badge bg-success" id="systemStatus">✓ Работает</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Основная панель -->
+            <div class="col-lg-8">
+                <!-- Панель вопросов -->
+                <div class="question-box">
+                    <form id="questionForm">
+                        <div class="mb-3">
+                            <label for="questionInput" class="form-label fw-bold">
+                                <i class="fas fa-question-circle text-primary"></i> Ваш вопрос:
+                            </label>
+                            <textarea
+                                class="form-control form-control-lg"
+                                id="questionInput"
+                                rows="3"
+                                placeholder="Задайте вопрос по вашим документам..."
+                                autocomplete="off"
+                                autofocus></textarea>
+                        </div>
+
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <label for="documentsCount" class="form-label">
+                                    <i class="fas fa-file-alt"></i> Документов для анализа:
+                                </label>
+                                <select class="form-select" id="documentsCount">
+                                    <option value="1">1 документ</option>
+                                    <option value="2">2 документа</option>
+                                    <option value="3" selected>3 документа</option>
+                                    <option value="5">5 документов</option>
+                                    <option value="10">10 документов</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="similarityThreshold" class="form-label">
+                                    <i class="fas fa-filter"></i> Порог релевантности:
+                                </label>
+                                <input type="range"
+                                       class="form-range"
+                                       id="similarityThreshold"
+                                       min="0"
+                                       max="1"
+                                       step="0.1"
+                                       value="0.3">
+                                <div class="text-muted small">
+                                    Текущее: <span id="thresholdValue">0.3</span>
+                                    <div class="confidence-meter mt-1">
+                                        <div class="confidence-fill" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-label mb-0">
+                                        <i class="fas fa-brain"></i> Использовать LLM:
+                                    </label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="useLLM" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary-custom w-100">
+                                    <i class="fas fa-paper-plane"></i> Получить ответ
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">Примеры: </small>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="setExample('расписание занятий')">
+                                расписание занятий
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="setExample('правила обучения')">
+                                правила обучения
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="setExample('контакты деканата')">
+                                контакты деканата
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Ответ системы -->
+                <div id="answerSection" style="display: none;">
+                    <div class="answer-box">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4><i class="fas fa-comment-dots text-primary"></i> Ответ системы:</h4>
+                            <div class="text-muted small">
+                                <span id="responseTime"></span>
+                                <span class="ms-2" id="llmIndicator"></span>
+                            </div>
+                        </div>
+
+                        <div class="answer-text" id="answerText"></div>
+
+                        <!-- Источники -->
+                        <div class="mt-4" id="sourcesSection" style="display: none;">
+                            <h6><i class="fas fa-link"></i> Источники:</h6>
+                            <div id="sourcesList" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- История диалога -->
+                <div class="question-box" id="historySection" style="display: none;">
+                    <h5><i class="fas fa-history text-primary"></i> История диалога</h5>
+                    <div id="chatHistory" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Боковая панель -->
+            <div class="col-lg-4">
+                <!-- Найденные документы -->
+                <div class="documents-box">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-folder-open text-primary"></i> Найденные документы</h5>
+                        <span class="badge bg-secondary" id="documentsCountBadge">0</span>
+                    </div>
+
+                    <div id="documentsList" class="mb-3">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-file-alt fa-2x mb-2"></i>
+                            <p>Здесь появятся найденные документы после вопроса</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button class="btn btn-outline-primary btn-sm" onclick="showAllDocuments()" id="showAllBtn" style="display: none;">
+                            <i class="fas fa-expand"></i> Показать все документы
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Статистика системы -->
+                <div class="documents-box mt-4">
+                    <h5><i class="fas fa-chart-bar text-primary"></i> Статистика</h5>
+                    <div id="systemStats">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <p class="text-muted mt-2">Загрузка статистики...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для документов -->
+        <div class="modal fade" id="documentsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-file-alt"></i> Полный текст документа</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="modalDocumentContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        let currentDocuments = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Инициализация элементов управления
+            updateThresholdValue();
+
+            // События
+            document.getElementById('similarityThreshold').addEventListener('input', updateThresholdValue);
+            document.getElementById('questionForm').addEventListener('submit', handleSubmit);
+
+            // Загрузка статистики
+            loadSystemStats();
+
+            // Загрузка истории чата
+            loadChatHistory();
+
+            // Проверка состояния системы
+            checkSystemHealth();
+        }
+
+        function updateThresholdValue() {
+            const slider = document.getElementById('similarityThreshold');
+            const value = parseFloat(slider.value).toFixed(1);
+            document.getElementById('thresholdValue').textContent = value;
+
+            // Обновляем индикатор
+            const fill = document.querySelector('.confidence-fill');
+            fill.style.width = (value * 100) + '%';
+        }
+
+        function setExample(question) {
+            document.getElementById('questionInput').value = question;
+            document.getElementById('questionInput').focus();
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const question = document.getElementById('questionInput').value.trim();
+            if (!question) {
+                showAlert('Пожалуйста, введите вопрос', 'warning');
+                return;
+            }
+
+            // Показать загрузку
+            showLoading(true, 'Поиск релевантных документов...');
+
+            const data = {
+                question: question,
+                k: parseInt(document.getElementById('documentsCount').value),
+                threshold: parseFloat(document.getElementById('similarityThreshold').value),
+                use_llm: document.getElementById('useLLM').checked
+            };
+
+            try {
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // Скрыть загрузку
+                showLoading(false);
+
+                if (result.success) {
+                    // Сохраняем документы для отображения
+                    currentDocuments = result.documents || [];
+
+                    // Отображаем ответ
+                    displayAnswer(result);
+
+                    // Добавляем в историю
+                    addToHistory(question, result);
+
+                    // Показываем документы
+                    displayDocuments(currentDocuments);
+
+                    // Обновляем статистику
+                    loadSystemStats();
+                } else {
+                    showAlert(`Ошибка: ${result.error || 'Неизвестная ошибка'}`, 'danger');
+                }
+            } catch (error) {
+                showLoading(false);
+                showAlert(`Ошибка соединения: ${error.message}`, 'danger');
+            }
+        }
+
+        function displayAnswer(result) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+            const responseTime = document.getElementById('responseTime');
+            const llmIndicator = document.getElementById('llmIndicator');
+            const sourcesSection = document.getElementById('sourcesSection');
+            const sourcesList = document.getElementById('sourcesList');
+
+            // Форматируем время
+            const totalTime = result.total_time ? result.total_time.toFixed(2) : '?';
+            responseTime.textContent = `Время обработки: ${totalTime}с`;
+
+            // Индикатор LLM
+            if (result.used_llm) {
+                llmIndicator.innerHTML = `<span class="badge bg-primary"><i class="fas fa-brain"></i> LLM</span>`;
+            } else {
+                llmIndicator.innerHTML = `<span class="badge bg-secondary"><i class="fas fa-search"></i> Только поиск</span>`;
+            }
+
+            // Отображаем ответ (поддержка Markdown)
+            let answerHtml = result.answer;
+            try {
+                answerHtml = marked.parse(result.answer);
+            } catch (e) {
+                console.log('Markdown parsing failed, using plain text');
+            }
+
+            answerText.innerHTML = answerHtml;
+
+            // Отображаем источники
+            if (result.sources && result.sources.length > 0) {
+                sourcesList.innerHTML = '';
+                result.sources.forEach((source, index) => {
+                    const sourceColor = getSourceColor(source);
+                    sourcesList.innerHTML += `
+                        <span class="badge" style="background: ${sourceColor}">
+                            <span class="source-indicator" style="background: white"></span>
+                            ${source}
+                        </span>
+                    `;
+                });
+                sourcesSection.style.display = 'block';
+            } else {
+                sourcesSection.style.display = 'none';
+            }
+
+            // Показываем секцию
+            answerSection.style.display = 'block';
+
+            // Прокручиваем к ответу
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function displayDocuments(documents) {
+            const documentsList = document.getElementById('documentsList');
+            const countBadge = document.getElementById('documentsCountBadge');
+            const showAllBtn = document.getElementById('showAllBtn');
+
+            countBadge.textContent = documents.length;
+
+            if (documents.length === 0) {
+                documentsList.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>Документы не найдены</p>
+                    </div>
+                `;
+                showAllBtn.style.display = 'none';
+                return;
+            }
+
+            // Сортируем по сходству
+            documents.sort((a, b) => b.score - a.score);
+
+            // Показываем первые 3 документа, остальные скрываем
+            let visibleDocuments = documents.slice(0, 3);
+            let hiddenDocuments = documents.slice(3);
+
+            let html = '';
+
+            visibleDocuments.forEach((doc, index) => {
+                const scorePercent = Math.round(doc.score * 100);
+                const sourceColor = getSourceColor(doc.source);
+
+                html += `
+                    <div class="document-card" onclick="showDocumentModal(${index})">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="score-badge">${scorePercent}% релевантности</span>
+                                <span class="badge" style="background: ${sourceColor}; color: white; margin-left: 5px;">
+                                    ${doc.source}
+                                </span>
+                            </div>
+                            <small class="text-muted">#${index + 1}</small>
+                        </div>
+                        <p class="mb-2" style="font-size: 0.9em;">${doc.preview || doc.text.substring(0, 150) + '...'}</p>
+                        <div class="small text-muted">
+                            Фрагмент: ${doc.metadata?.chunk_id || 0 + 1}/${doc.metadata?.total_chunks || 1}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (hiddenDocuments.length > 0) {
+                showAllBtn.style.display = 'block';
+                showAllBtn.setAttribute('data-documents', JSON.stringify(documents));
+            } else {
+                showAllBtn.style.display = 'none';
+            }
+
+            documentsList.innerHTML = html;
+        }
+
+        function showAllDocuments() {
+            const btn = document.getElementById('showAllBtn');
+            const allDocuments = JSON.parse(btn.getAttribute('data-documents') || '[]');
+
+            if (allDocuments.length > 3) {
+                const documentsList = document.getElementById('documentsList');
+                let html = '';
+
+                allDocuments.forEach((doc, index) => {
+                    const scorePercent = Math.round(doc.score * 100);
+                    const sourceColor = getSourceColor(doc.source);
+
+                    html += `
+                        <div class="document-card" onclick="showDocumentModal(${index})">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="score-badge">${scorePercent}% релевантности</span>
+                                    <span class="badge" style="background: ${sourceColor}; color: white; margin-left: 5px;">
+                                        ${doc.source}
+                                    </span>
+                                </div>
+                                <small class="text-muted">#${index + 1}</small>
+                            </div>
+                            <p class="mb-2" style="font-size: 0.9em;">${doc.preview || doc.text.substring(0, 150) + '...'}</p>
+                            <div class="small text-muted">
+                                Фрагмент: ${doc.metadata?.chunk_id || 0 + 1}/${doc.metadata?.total_chunks || 1}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                documentsList.innerHTML = html;
+                btn.textContent = 'Свернуть документы';
+                btn.setAttribute('onclick', 'collapseDocuments()');
+            }
+        }
+
+        function collapseDocuments() {
+            displayDocuments(currentDocuments);
+            const btn = document.getElementById('showAllBtn');
+            btn.textContent = 'Показать все документы';
+            btn.setAttribute('onclick', 'showAllDocuments()');
+        }
+
+        function showDocumentModal(index) {
+            if (currentDocuments[index]) {
+                const doc = currentDocuments[index];
+                const modalContent = document.getElementById('modalDocumentContent');
+
+                modalContent.innerHTML = `
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="badge bg-primary">${Math.round(doc.score * 100)}% релевантности</span>
+                                <span class="badge bg-secondary ms-2">${doc.source}</span>
+                            </div>
+                            <small class="text-muted">Фрагмент ${doc.metadata?.chunk_id || 0 + 1} из ${doc.metadata?.total_chunks || 1}</small>
+                        </div>
+                        <div style="white-space: pre-wrap; max-height: 500px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            ${escapeHtml(doc.text)}
+                        </div>
+                        <div class="mt-3">
+                            <strong>Метаданные:</strong>
+                            <pre class="bg-light p-2 rounded small mt-2">${JSON.stringify(doc.metadata, null, 2)}</pre>
+                        </div>
+                    </div>
+                `;
+
+                const modal = new bootstrap.Modal(document.getElementById('documentsModal'));
+                modal.show();
+            }
+        }
+
+        function addToHistory(question, result) {
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                question: question,
+                answer: result.answer,
+                sources: result.sources || [],
+                documentsCount: result.documents_count || 0,
+                time: result.total_time || 0
+            };
+
+            // Добавляем в начало
+            chatHistory.unshift(historyItem);
+
+            // Ограничиваем 20 последними вопросами
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(0, 20);
+            }
+
+            // Сохраняем
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+
+            // Обновляем отображение
+            updateChatHistory();
+        }
+
+        function updateChatHistory() {
+            const historySection = document.getElementById('historySection');
+            const chatHistoryDiv = document.getElementById('chatHistory');
+
+            if (chatHistory.length === 0) {
+                historySection.style.display = 'none';
+                return;
+            }
+
+            historySection.style.display = 'block';
+
+            let html = '';
+            chatHistory.slice(0, 5).forEach(item => {
+                const time = new Date(item.timestamp).toLocaleTimeString();
+                html += `
+                    <div class="chat-bubble question mb-2">
+                        <div class="small text-muted">${time}</div>
+                        <strong>Q:</strong> ${item.question.substring(0, 100)}${item.question.length > 100 ? '...' : ''}
+                        <div class="small text-muted mt-1">
+                            <i class="fas fa-file-alt"></i> ${item.documentsCount} док. |
+                            <i class="fas fa-clock"></i> ${item.time.toFixed(2)}с
+                        </div>
+                    </div>
+                    <div class="chat-bubble answer mb-3">
+                        <strong>A:</strong> ${item.answer.substring(0, 150)}${item.answer.length > 150 ? '...' : ''}
+                    </div>
+                `;
+            });
+
+            chatHistoryDiv.innerHTML = html;
+        }
+
+        function loadChatHistory() {
+            updateChatHistory();
+        }
+
+        async function loadSystemStats() {
+            try {
+                const response = await fetch('/stats');
+                const data = await response.json();
+
+                const statsDiv = document.getElementById('systemStats');
+                statsDiv.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-primary">${data.total_vectors || 0}</div>
+                            <div class="small text-muted">Векторов</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-success">${data.metadata_count || 0}</div>
+                            <div class="small text-muted">Документов</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-warning">${data.search_count || 0}</div>
+                            <div class="small text-muted">Поисков</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-info">${data.model ? data.model.split('/').pop() : '?'}</div>
+                            <div class="small text-muted">Модель</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
+        }
+
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                const statusBadge = document.getElementById('systemStatus');
+                if (data.status === 'ok') {
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.textContent = '✓ Работает';
+                } else {
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = '✗ Ошибка';
+                }
+            } catch (error) {
+                console.error('Ошибка проверки здоровья:', error);
+            }
+        }
+
+        function showLoading(show, text = 'Обработка...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+
+            if (show) {
+                loadingText.textContent = text;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            // Создаем временное уведомление
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-custom alert-dismissible fade show`;
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            `;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Автоматически скрываем через 5 секунд
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function getSourceColor(source) {
+            // Генерируем цвет на основе хеша источника
+            let hash = 0;
+            for (let i = 0; i < source.length; i++) {
+                hash = source.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            const colors = [
+                '#4361ee', '#3a0ca3', '#4cc9f0', '#f72585',
+                '#7209b7', '#3a86ff', '#06d6a0', '#ff9e00',
+                '#ef476f', '#118ab2', '#073b4c', '#ffd166'
+            ];
+
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Периодическая проверка состояния
+        setInterval(checkSystemHealth, 30000);
+    </script>
+</body>
+</html>

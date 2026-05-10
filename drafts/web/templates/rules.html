@@ -1,0 +1,127 @@
+              <!-- templates/rules.html -->
+{% extends "base.html" %}
+
+{% block title %}Правила обучения - AI Campus{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="glow-text">Правила обучения</h1>
+    <div class="ai-badge pulse">
+        АКТУАЛЬНО НА {{ now().strftime('%d.%m.%Y') }}
+    </div>
+</div>
+
+<!-- Поиск по правилам -->
+<div class="search-container">
+    <span class="search-icon"></span>
+    <input type="text" class="search-input" id="searchRules"
+           placeholder="Поиск по правилам, условиям, требованиям...">
+</div>
+
+<!-- Категории правил -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="btn-group" role="group">
+            <button class="btn btn-outline-ai" onclick="filterRules('all')">Все правила</button>
+            <button class="btn btn-outline-ai" onclick="filterRules('general')">Общие</button>
+            <button class="btn btn-outline-ai" onclick="filterRules('academic')">Учебные</button>
+            <button class="btn btn-outline-ai" onclick="filterRules('disciplinary')">Дисциплинарные</button>
+            <button class="btn btn-outline-ai" onclick="filterRules('scholarship')">Стипендии</button>
+        </div>
+    </div>
+</div>
+
+<!-- Правила -->
+<div class="row" id="rulesContainer">
+    {% for rule in rules %}
+    <div class="col-md-6 mb-4 rule-item" data-category="{{ rule.category }}">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>{{ rule.title }}</span>
+                <span class="badge" style="background: var(--accent-blue);">
+                    {% if rule.category == 'general' %}Общее
+                    {% elif rule.category == 'academic' %}Учебное
+                    {% elif rule.category == 'disciplinary' %}Дисциплинарное
+                    {% elif rule.category == 'scholarship' %}Стипендия
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="rule-content" style="white-space: pre-line;">
+                    {{ rule.content }}
+                </div>
+
+                <div class="mt-3 text-secondary small">
+                    <i>Последнее обновление: {{ rule.updated_at.strftime('%d.%m.%Y') }}</i>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- AI Рекомендации -->
+<div class="card mt-4">
+    <div class="card-header">
+        <span class="glow-text">AI-РЕКОМЕНДАЦИИ</span>
+    </div>
+    <div class="card-body">
+        <p class="mb-3">На основе вашей роли и группы, рекомендуем обратить внимание на:</p>
+
+        {% if current_user.is_authenticated and current_user.role == 'student' %}
+        <ul class="list-unstyled">
+            <li class="mb-2">• Правила получения повышенной стипендии</li>
+            <li class="mb-2">• Требования к посещаемости для вашей группы</li>
+            <li class="mb-2">• Условия перевода на бюджет</li>
+            <li class="mb-2">• Порядок оформления академического отпуска</li>
+        </ul>
+        {% elif current_user.is_authenticated and current_user.role == 'teacher' %}
+        <ul class="list-unstyled">
+            <li class="mb-2">• Правила проведения занятий и аттестации</li>
+            <li class="mb-2">• Требования к оформлению отчетности</li>
+            <li class="mb-2">• Дисциплинарные взыскания для студентов</li>
+        </ul>
+        {% endif %}
+
+        <button class="btn-ai btn-sm mt-2" onclick="window.location.href='{{ url_for('index') }}'">
+            Задать вопрос AI-помощнику
+        </button>
+    </div>
+</div>
+
+<script>
+function filterRules(category) {
+    const rules = document.querySelectorAll('.rule-item');
+
+    rules.forEach(rule => {
+        if (category === 'all' || rule.dataset.category === category) {
+            rule.style.display = 'block';
+        } else {
+            rule.style.display = 'none';
+        }
+    });
+
+    // Подсветка активной кнопки
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+document.getElementById('searchRules').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    const rules = document.querySelectorAll('.rule-item');
+
+    rules.forEach(rule => {
+        const content = rule.querySelector('.rule-content').textContent.toLowerCase();
+        const title = rule.querySelector('.card-header span:first-child').textContent.toLowerCase();
+
+        if (content.includes(query) || title.includes(query) || query === '') {
+            rule.style.display = 'block';
+        } else {
+            rule.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

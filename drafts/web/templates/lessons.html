@@ -1,0 +1,155 @@
+<!-- templates/lessons.html -->
+{% extends "base.html" %}
+
+{% block title %}Уроки и расписание - AI Campus{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="glow-text">Уроки и занятия</h1>
+    <div class="ai-badge pulse">
+        AI-ПОМОЩНИК: Активен
+    </div>
+</div>
+
+<!-- Поиск -->
+<div class="search-container">
+    <span class="search-icon"></span>
+    <input type="text" class="search-input" id="searchLessons"
+           placeholder="Поиск уроков, преподавателей, аудиторий...">
+</div>
+
+<!-- Фильтры -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="facultyFilter">
+            <option value="">Все факультеты</option>
+            <option value="ФИиВТ">Факультет информатики и вычислительной техники</option>
+            <option value="ФМиАТ">Факультет математики и аналитических технологий</option>
+            <option value="ФЭиУ">Факультет экономики и управления</option>
+            <option value="ФГН">Факультет гуманитарных наук</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="typeFilter">
+            <option value="">Все типы занятий</option>
+            <option value="lecture">Лекции</option>
+            <option value="practice">Практики</option>
+            <option value="lab">Лабораторные</option>
+            <option value="seminar">Семинары</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="dayFilter">
+            <option value="">Все дни</option>
+            <option value="1">Понедельник</option>
+            <option value="2">Вторник</option>
+            <option value="3">Среда</option>
+            <option value="4">Четверг</option>
+            <option value="5">Пятница</option>
+            <option value="6">Суббота</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn-ai w-100" onclick="filterLessons()">
+            Применить фильтры
+        </button>
+    </div>
+</div>
+
+<!-- Результаты поиска -->
+<div id="searchResults" class="mb-4" style="display: none;">
+    <div class="alert alert-ai">
+        Найдено <span id="resultsCount">0</span> результатов
+        <button class="btn btn-sm btn-outline-ai ms-3" onclick="clearSearch()">Сбросить</button>
+    </div>
+</div>
+
+<!-- Сетка уроков -->
+<div class="lesson-grid" id="lessonsGrid">
+    {% for lesson in lessons %}
+    <div class="lesson-card" data-id="{{ lesson.id }}">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="ai-badge">{{ lesson.lesson_type_rus }}</span>
+            <span class="lesson-time">{{ lesson.start_time.strftime('%H:%M') }} - {{ lesson.end_time.strftime('%H:%M') }}</span>
+        </div>
+        <h5>{{ lesson.title }}</h5>
+        <p class="text-secondary mb-3">{{ lesson.description|truncate(100) }}</p>
+
+        <div class="mb-3">
+            <div><strong>Предмет:</strong> {{ lesson.subject }}</div>
+            <div><strong>Преподаватель:</strong> {{ lesson.teacher.get_full_name() }}</div>
+            <div><strong>Аудитория:</strong> {{ lesson.classroom }} ({{ lesson.building }})</div>
+            {% if lesson.group %}
+            <div><strong>Группа:</strong> {{ lesson.group }}</div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('lesson_detail', lesson_id=lesson.id) }}" class="btn-ai btn-sm">
+                Подробнее
+            </a>
+            {% if lesson.is_online %}
+            <span class="badge" style="background: var(--accent-blue);">Online</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('lessons', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+
+<script>
+function filterLessons() {
+    const faculty = document.getElementById('facultyFilter').value;
+    const type = document.getElementById('typeFilter').value;
+    const day = document.getElementById('dayFilter').value;
+
+    window.location.href = `{{ url_for('lessons') }}?faculty=${faculty}&type=${type}&day=${day}`;
+}
+
+document.getElementById('searchLessons').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.lesson-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(query) || query === '') {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const resultsDiv = document.getElementById('searchResults');
+    const resultsCount = document.getElementById('resultsCount');
+
+    if (query) {
+        resultsDiv.style.display = 'block';
+        resultsCount.textContent = visibleCount;
+    } else {
+        resultsDiv.style.display = 'none';
+    }
+});
+
+function clearSearch() {
+    document.getElementById('searchLessons').value = '';
+    document.getElementById('searchResults').style.display = 'none';
+    document.querySelectorAll('.lesson-card').forEach(card => {
+        card.style.display = 'block';
+    });
+}
+</script>
+{% endblock %}
