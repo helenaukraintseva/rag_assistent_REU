@@ -1,6 +1,6 @@
 # RAG QA Система с векторным поиском и LLM
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 [![RAG System](https://img.shields.io/badge/architecture-RAG-orange.svg)]()
@@ -11,7 +11,7 @@
 
 - **📚 Поддержка множества форматов**: TXT, PDF, DOCX
 - **🔍 Семантический поиск**: Поиск по смыслу с использованием векторных эмбеддингов
-- **🤖 Интеграция с LLM**: Поддержка Gemini API и других языковых моделей
+- **🤖 Интеграция с LLM**: Поддержка gigachat/yandexGPT и других языковых моделей
 - **⚡ Две векторные БД**: Поддержка ChromaDB и FAISS
 - **🌐 Веб-интерфейс**: Современный интерфейс для взаимодействия
 - **📊 Мониторинг**: Статистика и мониторинг работы системы
@@ -19,48 +19,37 @@
 ## 🏗️ Архитектура системы
 ```
 ┌─────────────────┐       ┌─────────────────┐      ┌─────────────────┐
-│ Документы       │ ───▶ │   Векторная БД  │ ───▶ │   Поисковый     │
+│ Документы       │ ───▶  │   Векторная БД  │ ───▶ │   Поисковый     │
 │ (TXT/PDF/DOCX)  │       │ (ChromaDB/FAISS)│      │    движок       │
 └─────────────────┘       └─────────────────┘      └─────────────────┘
 
 ┌─────────────────┐    ┌─────────────────┐      ┌─────────▼─────────┐
-│ Пользователь    │◀───│ Веб-интерфейс  │ ◀─── │ LLM-сервис        │
-│     (Flask)     │    │    (Gemini API) │      │                   │
+│ Пользователь    │◀───│ Веб-интерфейс   │ ◀─── │ LLM-сервис        │
+│     (Flask)     │    │    (gigachat/   │      │                   │
+│                 │    │   yandexGPT API)│      │                   │
 └─────────────────┘    └─────────────────┘      └───────────────────┘
 ```
 📁 Структура проекта
 
 ```
-rag_assistant/
-├── app.py                        # Главный файл веб-интерфейса (Flask)
-├── rag_pipeline.py               # Класс RAGPipeline (основная логика)
-├── build_vector_store.py         # Скрипт для генерации эмбеддингов и создания Chroma DB
-├── config.py                     # Конфигурации (параметры, API-ключи, пути)
 ├── requirements.txt              # Зависимости проекта
-├── .env                          # Переменные окружения (API-ключи, не в git)
-├── chroma_db/                    # Директория с векторной БД (создаётся автоматически)
-│   └── (файлы индексов Chroma)
-├── data/                         # Исходные данные
-│   └── chunks.json               # Семантические чанки с метаданными (результат предыдущего этапа)
-├── static/                       # Статические файлы для веб-интерфейса
-│   ├── style.css                 # Кастомные стили (опционально)
-│   └── script.js                 # Клиентская логика (опционально)
-├── templates/                    # HTML-шаблоны Flask
-│   └── index.html                # Главная страница чата
-├── utils/                        # Вспомогательные модули
-│   ├── __init__.py
-│   ├── text_processing.py        # Нормализация, исправление опечаток, префиксы (query:/passage:)
-│   ├── metadata_filters.py       # Авто-определение категории по ключевым словам
-│   └── metrics.py                # Метрики качества (precision@k, recall@k и т.д.)
-├── models/                       # Работа с моделями
-│   ├── __init__.py
-│   ├── embedding_model.py        # Загрузка intfloat/multilingual-e5-small
-│   └── llm_wrapper.py            # Абстракция для TinyLlama (локально) и GigaChat (API)
-└── tests/                        # Тестирование
-    ├── test_retrieval.py         # Проверка семантического поиска
-    ├── test_pipeline.py          # Интеграционные тесты RAG-пайплайна
-    ├── test_interface.py         # Функциональное тестирование веб-интерфейса
-    └── test_queries.json         # 20-25 тестовых запросов из отчёта
+├── config.py                     # Конфигурация системы
+├── web_interface.py              # Основной Flask сервер
+├── index.html                    # Веб-интерфейс
+│
+├── document_loader.py            # Загрузка документов
+├── text_splitter.py              # Разбиение текста на чанки
+├── embedding_generator.py        # Генерация эмбеддингов
+│
+├── faiss_manager.py              # Управление FAISS
+├── chroma_manager.py             # Управление ChromaDB
+├── retriever.py                  # Поисковый движок
+├── build_vector_db.py            # Построение векторной БД
+│
+├── program_1_check.py            # Тестирование API сервера
+├── program_2.py                  # gigachat/yandexGPT API сервер
+├── migrate_faiss_to_chromadb.py  # Миграция между БД
+└── check_retriever.py            # Проверка ретривера
 ```
 
 
@@ -97,7 +86,8 @@ class Config:
     DEVICE = "cpu"  # или "cuda"
     
     # Настройки LLM
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "ваш-api-ключ")
+    GIGACHAT_API_KEY = os.getenv("GIGACHAT_API_KEY", "ваш-api-ключ")
+    YANDEX_API_KEY = os.getenv("YANDEX_API_KEY", "ваш-api-ключ")
 ```
 
 ### 4. Подготовка данных
@@ -124,7 +114,7 @@ python migrate_faiss_to_chromadb.py
 ```
 
 ### Вариант 3: Запуск LLM API сервера
-Для использования с Gemini API:
+Для использования с gigachat/yandexGPT:
 
 ```bash
 python program_2.py
@@ -144,17 +134,6 @@ python program_2.py
 | **GET** | `/health` | Проверка состояния системы | - |
 | **GET** | `/stats` | Статистика векторной БД | - |
 
-### LLM API сервер (FastAPI - порт 8002)
-
-| Метод | Эндпоинт | Описание | Пример тела запроса |
-|-------|----------|----------|-------------------|
-| **GET** | `/` | Информация о сервере | - |
-| **GET** | `/health` | Проверка здоровья сервера | - |
-| **POST** | `/api/simple` | Простой текстовый промпт | `{"question": "Ваш вопрос здесь"}` |
-| **POST** | `/api/structured` | Структурированный промпт | `{"role": "эксперт", "task": "объяснить тему", "requirements": "быть кратким", "input_data": "что такое ИИ?"}` |
-| **POST** | `/api/detailed` | Детализированный промпт | `{"role_context": "эксперт по ML", "main_task": "объяснить нейросети", "requirements": ["просто", "с примерами"], "input_data": "что такое CNN?"}` |
-| **POST** | `/api/rag/context` | RAG с готовым контекстом | `{"question": "Ваш вопрос", "context_documents": [{"id": "doc1", "content": "текст документа", "metadata": {"source": "файл.txt"}}], "use_rag": true}` |
-
 ## 🔍 Использование
 ### Через веб-интерфейс
 1. Откройте http://localhost:5000
@@ -163,7 +142,7 @@ python program_2.py
 
 4. Нажмите "Получить ответ"
 
-### Через API
+Через API
 ```python
 import requests
 
@@ -186,11 +165,12 @@ response = requests.post("http://localhost:5000/api/ask",
 
 - **DEVICE** - Используемое устройство (cpu/cuda)
 
-- **GEMINI_API_KEY** - API ключ для Gemini
+- **gigachat/yandexGPT** - API ключи для gigachat/yandexGPT
 
 Переменные окружения:
 ```bash
-export GEMINI_API_KEY="ваш-api-ключ"
+export GIGACHAT_API_KEY="ваш-api-ключ"
+export YANDEX_API_KEY="ваш-api-ключ"
 export SEARCH_SERVICE_URL="http://localhost:8001"
 ```
 ## 🧪 Тестирование
@@ -289,6 +269,4 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 ## 📞 Поддержка
 По вопросам использования и проблемам создавайте issues в репозитории.
 
-
 ## 🚀 Начните использовать RAG QA систему уже сегодня!
-
